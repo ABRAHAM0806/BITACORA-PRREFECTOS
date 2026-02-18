@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bitácora Digital</title>
+  <style>
+    body { font-family: Arial; max-width: 500px; margin: auto; }
+    label, select, input, button { display: block; width: 100%; margin: 10px 0; }
+    button { padding: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>📘 Bitácora Digital</h2>
+
+<form action="/buscar" method="post">
+  <label>Matrícula del maestro</label>
+  <input type="number" name="matricula" required>
+
+  <label>Día</label>
+  <select name="dia" required>
+    <option>Lunes</option>
+    <option>Martes</option>
+    <option>Miércoles</option>
+    <option>Jueves</option>
+    <option>Viernes</option>
+  </select>
+
+  <button type="submit">Buscar</button>
+</form>
+
+{% if resultado %}
+<hr>
+<p><strong>{{ resultado }}</strong></p>
+{% endif %}
+
+</body>
+</html>
