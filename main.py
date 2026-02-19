@@ -12,7 +12,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 BITACORA_FILE = "bitacora.xlsx"
-HOJA = "concentrado"
+HOJA = "concentrado diur."
 
 
 def buscar_profesor(matricula, dia):
