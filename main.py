@@ -5,14 +5,12 @@ from fastapi.staticfiles import StaticFiles
 import pandas as pd
 
 app = FastAPI()
-
-# 🔹 Habilitar carpeta static (LOGO)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
 BITACORA_FILE = "bitacora.xlsx"
-HOJA = "concentrado diur."
+HOJA = "concentrado"
 
 DIAS = {
     "lunes": (4, 8),
@@ -33,59 +31,49 @@ def buscar_profesor(matricula: str, dia: str):
     df = pd.read_excel(BITACORA_FILE, sheet_name=HOJA, header=None)
 
     matricula = normalizar(matricula)
-    dia = dia.strip().lower()
+    dia = dia.lower()
 
     if dia not in DIAS:
-        return None
+        return []
 
     col_inicio, col_fin = DIAS[dia]
+    resultados = []
 
     for fila in range(5, len(df)):
-        aula = normalizar(df.iloc[fila, 0])   # Columna A = SALÓN
-        grupo = normalizar(df.iloc[fila, 1])  # Columna B = GRUPO
+        aula = normalizar(df.iloc[fila, 0])
+        grupo = normalizar(df.iloc[fila, 1])
 
         for i, col in enumerate(range(col_inicio, col_fin + 1)):
             celda = normalizar(df.iloc[fila, col])
 
             if celda == matricula:
-                return {
-                    "dia": dia.capitalize(),
+                resultados.append({
                     "hora": HORAS[i],
                     "aula": aula,
                     "grupo": grupo
-                }
+                })
 
-    return None
+    return resultados
 
 
 @app.get("/", response_class=HTMLResponse)
 def inicio(request: Request):
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "resultado": None}
+        {"request": request, "resultados": None}
     )
 
 
 @app.post("/buscar", response_class=HTMLResponse)
-def buscar(
-    request: Request,
-    matricula: str = Form(...),
-    dia: str = Form(...)
-):
-    resultado = buscar_profesor(matricula, dia)
-
-    if not resultado:
-        mensaje = f"No se encontró al maestro {matricula.upper()} el {dia}."
-    else:
-        mensaje = (
-            f"El maestro {matricula.upper()} el {resultado['dia']} "
-            f"está en el salón {resultado['aula']} "
-            f"a las {resultado['hora']} "
-            f"(Grupo {resultado['grupo']})"
-        )
+def buscar(request: Request, matricula: str = Form(...), dia: str = Form(...)):
+    clases = buscar_profesor(matricula, dia)
 
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "resultado": mensaje}
+        {
+            "request": request,
+            "matricula": matricula.upper(),
+            "dia": dia.capitalize(),
+            "resultados": clases
+        }
     )
-
