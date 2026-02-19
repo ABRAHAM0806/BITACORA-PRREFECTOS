@@ -1,112 +1,127 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Bitácora de Prefectos</title>
+<meta charset="UTF-8">
+<title>Bitácora de Prefectos</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-        }
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f4f4f4;
+}
 
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background-color: white;
-            border-bottom: 3px solid #0a7c3a;
-        }
+.header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: white;
+    border-bottom: 3px solid #0a7c3a;
+}
 
-        .header img {
-            height: 70px;
-        }
+.header img {
+    height: 60px;
+}
 
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #0a7c3a;
-        }
+.container {
+    max-width: 500px;
+    margin: 30px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+}
 
-        .container {
-            max-width: 500px;
-            margin: 40px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
+label {
+    margin-top: 15px;
+    display: block;
+    font-weight: bold;
+}
 
-        label {
-            display: block;
-            margin-top: 15px;
-            font-weight: bold;
-        }
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    font-size: 16px;
+}
 
-        input {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            font-size: 16px;
-        }
+button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    background: #0a7c3a;
+    color: white;
+    border: none;
+    font-size: 16px;
+    border-radius: 4px;
+}
 
-        button {
-            margin-top: 20px;
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            background-color: #0a7c3a;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 4px;
-        }
+.resultado {
+    margin-top: 20px;
+    background: #eaf6ef;
+    padding: 15px;
+    border-left: 5px solid #0a7c3a;
+}
 
-        button:hover {
-            background-color: #08632f;
-        }
+.clase {
+    margin-bottom: 10px;
+}
 
-        .resultado {
-            margin-top: 25px;
-            padding: 15px;
-            background-color: #e9f5ec;
-            border-left: 5px solid #0a7c3a;
-            font-size: 16px;
-        }
-    </style>
+/* 📱 RESPONSIVE */
+@media (max-width: 600px) {
+    .container {
+        margin: 15px;
+    }
+}
+</style>
 </head>
 
 <body>
 
-    <!-- ENCABEZADO -->
-    <div class="header">
-        <img src="/static/UDL_LogotipoColor.png" alt="Logo UDL">
-        <h1>Bitácora de Prefectos</h1>
-    </div>
+<div class="header">
+    <img src="/static/UDL_LogotipoColor.png">
+    <h2>Bitácora de Prefectos</h2>
+</div>
 
-    <!-- CONTENIDO -->
-    <div class="container">
-        <form method="post" action="/buscar">
+<div class="container">
+<form method="post" action="/buscar">
 
-            <label for="matricula">Matrícula del maestro</label>
-            <input type="text" name="matricula" id="matricula" required>
+    <label>Matrícula del maestro</label>
+    <input type="text" name="matricula" required>
 
-            <label for="dia">Día</label>
-            <input type="text" name="dia" id="dia" placeholder="Ejemplo: lunes" required>
+    <label>Día</label>
+    <select name="dia" required>
+        <option value="">Selecciona el día</option>
+        <option value="lunes">Lunes</option>
+        <option value="martes">Martes</option>
+        <option value="miercoles">Miércoles</option>
+        <option value="jueves">Jueves</option>
+        <option value="viernes">Viernes</option>
+    </select>
 
-            <button type="submit">Buscar</button>
+    <button type="submit">Buscar</button>
+</form>
 
-        </form>
+{% if resultados is not none %}
+<div class="resultado">
+    {% if resultados|length == 0 %}
+        ❌ No se encontraron clases.
+    {% else %}
+        <strong>📘 Maestro {{ matricula }} – {{ dia }}</strong><br><br>
 
-        {% if resultado %}
-        <div class="resultado">
-            {{ resultado }}
+        {% for clase in resultados %}
+        <div class="clase">
+            ⏰ {{ clase.hora }} <br>
+            🏫 Salón {{ clase.aula }} <br>
+            👥 Grupo {{ clase.grupo }}
         </div>
-        {% endif %}
-    </div>
+        <hr>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endif %}
+</div>
 
 </body>
 </html>
+
