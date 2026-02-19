@@ -19,16 +19,17 @@ def buscar_profesor(matricula, dia):
     df = pd.read_excel(BITACORA_FILE, sheet_name=HOJA, header=None)
 
     resultados = []
+    columnas = COLUMNAS_DIA.get(dia, [])
 
     for fila in range(3, len(df)):
         aula = str(df.iloc[fila, 0]).strip()
-        if aula == "nan":
+        if aula.lower() == "nan":
             continue
 
-        for col in range(1, len(df.columns)):
-            texto = str(df.iloc[fila, col]).upper()
+        for col in columnas:
+            celda = str(df.iloc[fila, col]).upper()
 
-            if matricula.upper() in texto and dia.upper() in texto:
+            if matricula.upper() in celda:
                 resultados.append({
                     "Hora": df.iloc[1, col],
                     "Aula": aula,
@@ -37,6 +38,7 @@ def buscar_profesor(matricula, dia):
                 })
 
     return resultados
+
 
 
 @app.get("/", response_class=HTMLResponse)
