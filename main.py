@@ -1,9 +1,14 @@
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 import pandas as pd
 
 app = FastAPI()
+
+# 🔹 Habilitar carpeta static (LOGO)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 templates = Jinja2Templates(directory="templates")
 
 BITACORA_FILE = "bitacora.xlsx"
@@ -36,8 +41,8 @@ def buscar_profesor(matricula: str, dia: str):
     col_inicio, col_fin = DIAS[dia]
 
     for fila in range(5, len(df)):
-        aula = normalizar(df.iloc[fila, 0])   # SALÓN
-        grupo = normalizar(df.iloc[fila, 1])
+        aula = normalizar(df.iloc[fila, 0])   # Columna A = SALÓN
+        grupo = normalizar(df.iloc[fila, 1])  # Columna B = GRUPO
 
         for i, col in enumerate(range(col_inicio, col_fin + 1)):
             celda = normalizar(df.iloc[fila, col])
@@ -83,3 +88,4 @@ def buscar(
         "index.html",
         {"request": request, "resultado": mensaje}
     )
+
