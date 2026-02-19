@@ -7,7 +7,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 BITACORA_FILE = "bitacora.xlsx"
-HOJA = "concentrado diur."
+HOJA = "concentrado"
 
 DIAS = {
     "lunes": (4, 8),
@@ -20,24 +20,29 @@ DIAS = {
 HORAS = ["7:00", "8:00", "9:00", "10:00", "11:00"]
 
 
+def normalizar(valor):
+    return str(valor).strip().upper()
+
+
 def buscar_profesor(matricula: str, dia: str):
     df = pd.read_excel(BITACORA_FILE, sheet_name=HOJA, header=None)
 
-    dia = dia.lower()
+    matricula = normalizar(matricula)
+    dia = dia.strip().lower()
+
     if dia not in DIAS:
         return None
 
     col_inicio, col_fin = DIAS[dia]
 
-    # Empieza desde la fila donde están los datos reales
     for fila in range(5, len(df)):
-        aula = df.iloc[fila, 0]     # 👈 SALÓN REAL
-        grupo = df.iloc[fila, 1]
+        aula = normalizar(df.iloc[fila, 0])   # SALÓN
+        grupo = normalizar(df.iloc[fila, 1])
 
         for i, col in enumerate(range(col_inicio, col_fin + 1)):
-            celda = str(df.iloc[fila, col])
+            celda = normalizar(df.iloc[fila, col])
 
-            if matricula == celda:
+            if celda == matricula:
                 return {
                     "dia": dia.capitalize(),
                     "hora": HORAS[i],
@@ -57,14 +62,18 @@ def inicio(request: Request):
 
 
 @app.post("/buscar", response_class=HTMLResponse)
-def buscar(request: Request, matricula: str = Form(...), dia: str = Form(...)):
+def buscar(
+    request: Request,
+    matricula: str = Form(...),
+    dia: str = Form(...)
+):
     resultado = buscar_profesor(matricula, dia)
 
     if not resultado:
-        mensaje = f"No se encontró al maestro {matricula} el {dia}."
+        mensaje = f"No se encontró al maestro {matricula.upper()} el {dia}."
     else:
         mensaje = (
-            f"El maestro {matricula} el {resultado['dia']} "
+            f"El maestro {matricula.upper()} el {resultado['dia']} "
             f"está en el salón {resultado['aula']} "
             f"a las {resultado['hora']} "
             f"(Grupo {resultado['grupo']})"
