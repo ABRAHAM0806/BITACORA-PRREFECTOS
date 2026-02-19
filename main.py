@@ -9,8 +9,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-BITACORA_FILE = "bitacora.xlsx"
-HOJA = "concentrado diur."
+BITACORAS = [
+    ("bitacora.xlsx", "concentrado diur."),
+    ("bitacora 2.xlsx", "concentrado diur2.")
+]
+
 
 DIAS = {
     "lunes": (4, 8),
@@ -28,8 +31,6 @@ def normalizar(valor):
 
 
 def buscar_profesor(matricula: str, dia: str):
-    df = pd.read_excel(BITACORA_FILE, sheet_name=HOJA, header=None)
-
     matricula = normalizar(matricula)
     dia = dia.lower()
 
@@ -39,25 +40,28 @@ def buscar_profesor(matricula: str, dia: str):
     col_inicio, col_fin = DIAS[dia]
     resultados = []
 
-    for fila in range(5, len(df)):  # datos reales
-        aula = normalizar(df.iloc[fila, 0])     # Col A
-        grupo = normalizar(df.iloc[fila, 1])    # Col B
-        licenciatura = normalizar(df.iloc[fila, 2])  # ✅ Col C (C4:C68)
+    for archivo, hoja in BITACORAS:
+        df = pd.read_excel(archivo, sheet_name=hoja, header=None)
 
-        for i, col in enumerate(range(col_inicio, col_fin + 1)):
-            celda = normalizar(df.iloc[fila, col])
+        for fila in range(5, len(df)):
+            aula = normalizar(df.iloc[fila, 0])
+            grupo = normalizar(df.iloc[fila, 1])
 
-            if celda == matricula:
-                resultados.append({
-                    "hora": HORAS[i],
-                    "aula": aula,
-                    "grupo": grupo,
-                    "licenciatura": licenciatura
-                })
-                resultados.sort(key=lambda x: HORAS.index(x["hora"]))
+            for i, col in enumerate(range(col_inicio, col_fin + 1)):
+                celda = normalizar(df.iloc[fila, col])
 
+                if celda == matricula:
+                    resultados.append({
+                        "hora": HORAS[i],
+                        "aula": aula,
+                        "grupo": grupo
+                    })
+
+    # 🔹 ordenar por hora
+    resultados.sort(key=lambda x: HORAS.index(x["hora"]))
 
     return resultados
+
 
 
 
