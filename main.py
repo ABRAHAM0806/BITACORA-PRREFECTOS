@@ -9,50 +9,44 @@ templates = Jinja2Templates(directory="templates")
 BITACORA_FILE = "bitacora.xlsx"
 HOJA = "concentrado"
 
-DIAS = ["lunes", "martes", "miércoles", "miercoles", "jueves", "viernes", "sabado"]
+DIAS = {
+    "lunes": (4, 8),
+    "martes": (9, 13),
+    "miercoles": (14, 18),
+    "jueves": (19, 23),
+    "viernes": (24, 28),
+}
 
-# ---------- LOGICA PRINCIPAL ----------
+HORAS = ["7:00", "8:00", "9:00", "10:00", "11:00"]
 
-def buscar_profesor(matricula, dia_buscado):
-    dia_buscado = dia_buscado.lower().strip()
 
-    df = pd.read_excel(
-        BITACORA_FILE,
-        sheet_name=HOJA,
-        header=None
-    )
+def buscar_profesor(matricula: str, dia: str):
+    df = pd.read_excel(BITACORA_FILE, sheet_name=HOJA, header=None)
 
-    # Aulas están en columna A (index 0), filas 4 a 68
-    for fila in range(3, 68):  # A4 = index 3
-        aula = df.iat[fila, 0]
+    dia = dia.lower()
+    if dia not in DIAS:
+        return None
 
-        if pd.isna(aula):
-            continue
+    col_inicio, col_fin = DIAS[dia]
 
-        # Revisar columnas de horarios (desde columna B en adelante)
-        for col in range(1, len(df.columns)):
-            valor = df.iat[fila, col]
+    # Empieza desde la fila donde están los datos reales
+    for fila in range(5, len(df)):
+        aula = df.iloc[fila, 0]     # 👈 SALÓN REAL
+        grupo = df.iloc[fila, 1]
 
-            if str(valor).strip() == str(matricula):
+        for i, col in enumerate(range(col_inicio, col_fin + 1)):
+            celda = str(df.iloc[fila, col])
 
-                # Buscar día en el encabezado (filas superiores)
-                for encabezado_fila in range(0, 3):
-                    encabezado = str(df.iat[encabezado_fila, col]).lower()
-
-                    if encabezado in DIAS and encabezado == dia_buscado:
-                        # Hora normalmente está justo debajo del día
-                        hora = df.iat[encabezado_fila + 1, col]
-
-                        return {
-                            "matricula": matricula,
-                            "dia": encabezado.capitalize(),
-                            "aula": aula,
-                            "hora": hora
-                        }
+            if matricula == celda:
+                return {
+                    "dia": dia.capitalize(),
+                    "hora": HORAS[i],
+                    "aula": aula,
+                    "grupo": grupo
+                }
 
     return None
 
-# ---------- RUTAS ----------
 
 @app.get("/", response_class=HTMLResponse)
 def inicio(request: Request):
@@ -61,25 +55,22 @@ def inicio(request: Request):
         {"request": request, "resultado": None}
     )
 
+
 @app.post("/buscar", response_class=HTMLResponse)
-def buscar(
-    request: Request,
-    matricula: str = Form(...),
-    dia: str = Form(...)
-):
+def buscar(request: Request, matricula: str = Form(...), dia: str = Form(...)):
     resultado = buscar_profesor(matricula, dia)
 
     if not resultado:
         mensaje = f"No se encontró al maestro {matricula} el {dia}."
     else:
         mensaje = (
-            f"El maestro {resultado['matricula']} el {resultado['dia']} "
-            f"está en el aula {resultado['aula']} "
-            f"en horario {resultado['hora']}."
+            f"El maestro {matricula} el {resultado['dia']} "
+            f"está en el salón {resultado['aula']} "
+            f"a las {resultado['hora']} "
+            f"(Grupo {resultado['grupo']})"
         )
 
     return templates.TemplateResponse(
         "index.html",
         {"request": request, "resultado": mensaje}
     )
-
