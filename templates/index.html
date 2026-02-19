@@ -1,84 +1,77 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Búsqueda de Maestro</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Ubicación de Maestros</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4fbf6;
-            margin: 0;
-            padding: 20px;
-        }
+<style>
+body {
+    background: #f3fbf6;
+    font-family: Arial, sans-serif;
+    padding: 15px;
+}
 
-        .container {
-            max-width: 520px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
+.container {
+    max-width: 520px;
+    margin: auto;
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
 
-        h2 {
-            text-align: center;
-        }
+.logo {
+    text-align: center;
+    margin-bottom: 10px;
+}
 
-        label {
-            font-weight: bold;
-        }
+.logo img {
+    max-width: 180px;
+}
 
-        input, select, button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-        }
+h2 {
+    text-align: center;
+}
 
-        button {
-            background: #198754;
-            color: white;
-            border: none;
-            font-size: 16px;
-        }
+input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
 
-        .tarjeta {
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            border-left: 6px solid #999;
-            background: #f9f9f9;
-        }
+button {
+    background: #198754;
+    color: white;
+    border: none;
+    font-size: 16px;
+}
 
-        .Civil { border-left-color:#0d6efd; background:#eef4ff; }
-        .computacion { border-left-color:#198754; background:#eaf7f0; }
-        .Industrial { border-left-color:#fd7e14; background:#fff3e6; }
-        .psicologia { border-left-color:#6f42c1; background:#f3effc; }
-        .Mecatronica { border-left-color:#dc3545; background:#fdecee; }
-        .electro { border-left-color:#6c757d; background:#f1f1f1; }
-
-        .sin {
-            text-align: center;
-            color: #a00;
-            font-weight: bold;
-        }
-    </style>
+.tarjeta {
+    background: #f7f7f7;
+    border-left: 6px solid #198754;
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 12px;
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
-    <h2>🔎 Buscar Maestro</h2>
+
+    <div class="logo">
+        <img src="/static/UDL_LogotipoColor.png">
+    </div>
+
+    <h2>📍 ¿Dónde está el maestro?</h2>
 
     <form method="post" action="/buscar">
-        <label>Matrícula</label>
-        <input type="text" name="matricula" required>
+        <input type="text" name="matricula" placeholder="Matrícula (ej. 2101 o A38)" required>
 
-        <label>Día</label>
         <select name="dia" required>
             <option>Lunes</option>
             <option>Martes</option>
@@ -87,21 +80,22 @@
             <option>Viernes</option>
         </select>
 
-        <button type="submit">Buscar</button>
+        <button>Buscar</button>
     </form>
 
     {% if resultado %}
         {% for r in resultado %}
-            <div class="tarjeta {{ r['Carrera'] | replace(' ', '') }}">
-                <div>⏰ {{ r["Hora"] }}</div>
-                <div>🏫 Salón {{ r["Aula"] }}</div>
-                <div>👥 Grupo {{ r["Grupo"] }}</div>
-                <div>🎓 {{ r["Carrera"] }}</div>
-            </div>
+        <div class="tarjeta">
+            ⏰ {{ r["Hora"] }}<br>
+            🏫 Salón {{ r["Aula"] }}<br>
+            👥 Grupo {{ r["Grupo"] }}<br>
+            🎓 {{ r["Carrera"] }}
+        </div>
         {% endfor %}
     {% elif resultado == [] %}
-        <div class="sin">No tiene clases ese día</div>
+        <p style="text-align:center;color:red;">No tiene clases ese día</p>
     {% endif %}
+
 </div>
 
 </body>
