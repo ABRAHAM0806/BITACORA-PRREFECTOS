@@ -9,11 +9,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
+# ===== ARCHIVOS Y HOJAS =====
 BITACORAS = [
     ("bitacora.xlsx", "concentrado diur."),
     ("bitacora 2.xlsx", "concentrado diur2.")
 ]
-
 
 DIAS = {
     "lunes": (4, 8),
@@ -41,7 +41,10 @@ def buscar_profesor(matricula: str, dia: str):
     resultados = []
 
     for archivo, hoja in BITACORAS:
-        df = pd.read_excel(archivo, sheet_name=hoja, header=None)
+        try:
+            df = pd.read_excel(archivo, sheet_name=hoja, header=None)
+        except Exception:
+            continue  # si no abre un archivo, sigue con el otro
 
         for fila in range(5, len(df)):
             aula = normalizar(df.iloc[fila, 0])
@@ -57,12 +60,10 @@ def buscar_profesor(matricula: str, dia: str):
                         "grupo": grupo
                     })
 
-    # 🔹 ordenar por hora
+    # ordenar por horario
     resultados.sort(key=lambda x: HORAS.index(x["hora"]))
 
     return resultados
-
-
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -86,4 +87,5 @@ def buscar(request: Request, matricula: str = Form(...), dia: str = Form(...)):
             "resultados": clases
         }
     )
+
 
