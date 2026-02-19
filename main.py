@@ -7,7 +7,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 BITACORA_FILE = "bitacora.xlsx"
-HOJA = "concentrado1"
+HOJA = "concentrado diur."
 
 DIAS = {
     "lunes": (4, 8),
