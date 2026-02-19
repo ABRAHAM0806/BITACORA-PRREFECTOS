@@ -1,12 +1,10 @@
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 import pandas as pd
 
 app = FastAPI()
-
-# 🔹 Static (para logo, css, etc.)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
@@ -14,49 +12,73 @@ templates = Jinja2Templates(directory="templates")
 BITACORA_FILE = "bitacora.xlsx"
 HOJA = "concentrado diur."
 
+DIAS = {
+    "lunes": (4, 8),
+    "martes": (9, 13),
+    "miercoles": (14, 18),
+    "jueves": (19, 23),
+    "viernes": (24, 28),
+}
 
-def buscar_profesor(matricula, dia):
+HORAS = ["7:00", "8:00", "9:00", "10:00", "11:00"]
+
+
+def normalizar(valor):
+    return str(valor).strip().upper()
+
+
+def buscar_profesor(matricula: str, dia: str):
     df = pd.read_excel(BITACORA_FILE, sheet_name=HOJA, header=None)
 
+    matricula = normalizar(matricula)
+    dia = dia.lower()
+
+    if dia not in DIAS:
+        return []
+
+    col_inicio, col_fin = DIAS[dia]
     resultados = []
-    columnas = COLUMNAS_DIA.get(dia, [])
 
-    for fila in range(3, len(df)):
-        aula = str(df.iloc[fila, 0]).strip()
-        if aula.lower() == "nan":
-            continue
+    # 👇 fila fija donde está la licenciatura
+    licenciaturas = df.iloc[4]
 
-        for col in columnas:
-            celda = str(df.iloc[fila, col]).upper()
+    for fila in range(5, len(df)):
+        aula = normalizar(df.iloc[fila, 0])
+        grupo = normalizar(df.iloc[fila, 1])
 
-            if matricula.upper() in celda:
+        for i, col in enumerate(range(col_inicio, col_fin + 1)):
+            celda = normalizar(df.iloc[fila, col])
+
+            if celda == matricula:
                 resultados.append({
-                    "Hora": df.iloc[1, col],
-                    "Aula": aula,
-                    "Grupo": df.iloc[2, col],
-                    "Carrera": df.iloc[0, col]
+                    "hora": HORAS[i],
+                    "aula": aula,
+                    "grupo": grupo,
+                    "licenciatura": normalizar(licenciaturas[col])
                 })
 
     return resultados
 
 
-
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "resultado": None
-    })
+def inicio(request: Request):
+    return templates.TemplateResponse(
+        "index.html",
+        {"request": request, "resultados": None}
+    )
 
 
 @app.post("/buscar", response_class=HTMLResponse)
-def buscar(request: Request,
-           matricula: str = Form(...),
-           dia: str = Form(...)):
+def buscar(request: Request, matricula: str = Form(...), dia: str = Form(...)):
+    clases = buscar_profesor(matricula, dia)
 
-    resultado = buscar_profesor(matricula, dia)
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "matricula": matricula.upper(),
+            "dia": dia.capitalize(),
+            "resultados": clases
+        }
+    )
 
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "resultado": resultado
-    })
