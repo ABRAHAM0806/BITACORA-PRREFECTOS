@@ -2,79 +2,53 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 import pandas as pd
-import re
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 BITACORA_FILE = "bitacora.xlsx"
+HOJA = "concentrado diurno"
+
 DIAS = ["lunes", "martes", "miércoles", "miercoles", "jueves", "viernes", "sabado"]
 
-# ---------- UTILIDADES ----------
-
-def es_aula(valor, matricula):
-    if valor is None:
-        return False
-
-    texto = str(valor).strip()
-
-    # No confundir aula con matrícula
-    if texto == str(matricula):
-        return False
-
-    patrones = [
-        r"^[A-Z]\d{3}$",   # A229, B203
-        r"^\d{3,4}$"       # 1517, 201
-    ]
-
-    return any(re.match(p, texto) for p in patrones)
+# ---------- LOGICA PRINCIPAL ----------
 
 def buscar_profesor(matricula, dia_buscado):
     dia_buscado = dia_buscado.lower().strip()
-    xls = pd.ExcelFile(BITACORA_FILE)
 
-    for sheet in xls.sheet_names:
-        df = pd.read_excel(xls, sheet_name=sheet, header=None)
+    df = pd.read_excel(
+        BITACORA_FILE,
+        sheet_name=HOJA,
+        header=None
+    )
 
-        for fila_idx in range(len(df)):
-            for col_idx in range(len(df.columns)):
-                valor = df.iat[fila_idx, col_idx]
+    # Aulas están en columna A (index 0), filas 4 a 68
+    for fila in range(3, 68):  # A4 = index 3
+        aula = df.iat[fila, 0]
 
-                if str(valor).strip() == str(matricula):
+        if pd.isna(aula):
+            continue
 
-                    # 🔎 Buscar día hacia arriba
-                    dia_encontrado = None
-                    hora = None
-                    for offset in range(1, 7):
-                        if fila_idx - offset >= 0:
-                            posible_dia = str(df.iat[fila_idx - offset, col_idx]).lower()
-                            if posible_dia in DIAS and posible_dia == dia_buscado:
-                                dia_encontrado = posible_dia.capitalize()
-                                hora = df.iat[fila_idx - offset + 1, col_idx]
-                                break
+        # Revisar columnas de horarios (desde columna B en adelante)
+        for col in range(1, len(df.columns)):
+            valor = df.iat[fila, col]
 
-                    if not dia_encontrado:
-                        continue
+            if str(valor).strip() == str(matricula):
 
-                    # 🔎 Buscar aula alrededor
-                    aula = None
-                    for r in range(fila_idx - 1, fila_idx + 2):
-                        for c in range(col_idx - 2, col_idx + 3):
-                            if 0 <= r < len(df) and 0 <= c < len(df.columns):
-                                posible = df.iat[r, c]
-                                if es_aula(posible, matricula):
-                                    aula = posible
-                                    break
-                        if aula:
-                            break
+                # Buscar día en el encabezado (filas superiores)
+                for encabezado_fila in range(0, 3):
+                    encabezado = str(df.iat[encabezado_fila, col]).lower()
 
-                    return {
-                        "matricula": matricula,
-                        "dia": dia_encontrado,
-                        "hora": hora,
-                        "aula": aula,
-                        "hoja": sheet
-                    }
+                    if encabezado in DIAS and encabezado == dia_buscado:
+                        # Hora normalmente está justo debajo del día
+                        hora = df.iat[encabezado_fila + 1, col]
+
+                        return {
+                            "matricula": matricula,
+                            "dia": encabezado.capitalize(),
+                            "aula": aula,
+                            "hora": hora
+                        }
 
     return None
 
