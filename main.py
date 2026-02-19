@@ -54,6 +54,8 @@ def buscar_profesor(matricula: str, dia: str):
                     "grupo": grupo,
                     "licenciatura": licenciatura
                 })
+                resultados.sort(key=lambda x: HORAS.index(x["hora"]))
+
 
     return resultados
 
