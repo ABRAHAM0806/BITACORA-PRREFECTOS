@@ -7,18 +7,18 @@
 
 <style>
 body {
-    background: #f3fbf6;
+    background: #f2fbf5;
     font-family: Arial, sans-serif;
-    padding: 15px;
+    padding: 20px;
 }
 
 .container {
     max-width: 520px;
     margin: auto;
     background: white;
-    border-radius: 14px;
-    padding: 20px;
-    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
 }
 
 .logo {
@@ -32,13 +32,14 @@ body {
 
 h2 {
     text-align: center;
+    margin-bottom: 15px;
 }
 
 input, select, button {
     width: 100%;
     padding: 10px;
-    margin: 8px 0;
-    border-radius: 6px;
+    margin-top: 8px;
+    border-radius: 8px;
     border: 1px solid #ccc;
 }
 
@@ -47,14 +48,26 @@ button {
     color: white;
     border: none;
     font-size: 16px;
+    margin-top: 12px;
 }
 
 .tarjeta {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 12px;
     background: #f7f7f7;
     border-left: 6px solid #198754;
-    border-radius: 10px;
-    padding: 14px;
-    margin-top: 12px;
+}
+
+.tarjeta div {
+    margin-bottom: 4px;
+}
+
+.sin {
+    text-align: center;
+    color: #b00020;
+    margin-top: 20px;
+    font-weight: bold;
 }
 </style>
 </head>
@@ -63,42 +76,45 @@ button {
 
 <div class="container">
 
+    <!-- LOGO -->
     <div class="logo">
-        <img src="/static/UDL_LogotipoColor.png">
+        <img src="/static/UDL_LogotipoColor.png" alt="Logo UDL">
     </div>
 
-    <h2>📍 bitacora digital </h2>
+    <h2>📍 BITACORA DIGITAL </h2>
 
+    <!-- FORMULARIO -->
     <form method="post" action="/buscar">
         <input type="text" name="matricula" placeholder="Matrícula (ej. 2101 o A38)" required>
 
         <select name="dia" required>
-            <option>Lunes</option>
-            <option>Martes</option>
-            <option>Miércoles</option>
-            <option>Jueves</option>
-            <option>Viernes</option>
+            <option value="">Seleccione día</option>
+            <option value="lunes">Lunes</option>
+            <option value="martes">Martes</option>
+            <option value="miercoles">Miércoles</option>
+            <option value="jueves">Jueves</option>
+            <option value="viernes">Viernes</option>
         </select>
 
-        <button>Buscar</button>
+        <button type="submit">Buscar</button>
     </form>
 
-    {% if resultado %}
-        {% for r in resultado %}
+    <!-- RESULTADOS -->
+    {% if resultados %}
+        {% for r in resultados %}
         <div class="tarjeta">
-            ⏰ {{ r["Hora"] }}<br>
-            🏫 Salón {{ r["Aula"] }}<br>
-            👥 Grupo {{ r["Grupo"] }}<br>
-            🎓 {{ r["Carrera"] }}
+            <div>⏰ <strong>{{ r.hora }}</strong></div>
+            <div>🏫 Salón <strong>{{ r.aula }}</strong></div>
+            <div>👥 Grupo <strong>{{ r.grupo }}</strong></div>
+            <div>🎓 <strong>{{ r.licenciatura }}</strong></div>
         </div>
         {% endfor %}
-    {% elif resultado == [] %}
-        <p style="text-align:center;color:red;">No tiene clases ese día</p>
+    {% elif resultados == [] %}
+        <div class="sin">No tiene clases ese día</div>
     {% endif %}
 
 </div>
 
 </body>
 </html>
-
 
