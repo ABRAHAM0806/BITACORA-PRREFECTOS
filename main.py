@@ -39,12 +39,10 @@ def buscar_profesor(matricula: str, dia: str):
     col_inicio, col_fin = DIAS[dia]
     resultados = []
 
-    # 👇 fila fija donde está la licenciatura
-    licenciaturas = df.iloc[4]
-
-    for fila in range(5, len(df)):
-        aula = normalizar(df.iloc[fila, 0])
-        grupo = normalizar(df.iloc[fila, 1])
+    for fila in range(5, len(df)):  # datos reales
+        aula = normalizar(df.iloc[fila, 0])     # Col A
+        grupo = normalizar(df.iloc[fila, 1])    # Col B
+        licenciatura = normalizar(df.iloc[fila, 2])  # ✅ Col C (C4:C68)
 
         for i, col in enumerate(range(col_inicio, col_fin + 1)):
             celda = normalizar(df.iloc[fila, col])
@@ -54,10 +52,11 @@ def buscar_profesor(matricula: str, dia: str):
                     "hora": HORAS[i],
                     "aula": aula,
                     "grupo": grupo,
-                    "licenciatura": normalizar(licenciaturas[col])
+                    "licenciatura": licenciatura
                 })
 
     return resultados
+
 
 
 @app.get("/", response_class=HTMLResponse)
