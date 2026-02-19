@@ -1,43 +1,39 @@
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import pandas as pd
 
 app = FastAPI()
+
+# 🔹 Static (para logo, css, etc.)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 templates = Jinja2Templates(directory="templates")
 
 BITACORA_FILE = "bitacora.xlsx"
-HOJA = "concentrado diur."  # así se llama tu hoja ahora
+HOJA = "concentrado"
+
 
 def buscar_profesor(matricula, dia):
-    df = pd.read_excel(
-        BITACORA_FILE,
-        sheet_name=HOJA,
-        header=None
-    )
+    df = pd.read_excel(BITACORA_FILE, sheet_name=HOJA, header=None)
 
     resultados = []
 
-    # FILAS donde empiezan los datos reales
     for fila in range(3, len(df)):
         aula = str(df.iloc[fila, 0]).strip()
         if aula == "nan":
             continue
 
         for col in range(1, len(df.columns)):
-            valor = str(df.iloc[fila, col]).strip()
+            texto = str(df.iloc[fila, col]).upper()
 
-            if matricula.upper() in valor.upper() and dia.upper() in valor.upper():
-                # FILAS FIJAS POR TU FORMATO
-                hora = df.iloc[1, col]
-                grupo = df.iloc[2, col]
-                carrera = df.iloc[0, col]
-
+            if matricula.upper() in texto and dia.upper() in texto:
                 resultados.append({
-                    "Hora": hora,
+                    "Hora": df.iloc[1, col],
                     "Aula": aula,
-                    "Grupo": grupo,
-                    "Carrera": carrera
+                    "Grupo": df.iloc[2, col],
+                    "Carrera": df.iloc[0, col]
                 })
 
     return resultados
