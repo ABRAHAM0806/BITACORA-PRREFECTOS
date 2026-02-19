@@ -1,37 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>Bitácora Digital</title>
-  <style>
-    body { font-family: Arial; max-width: 500px; margin: auto; }
-    label, select, input, button { display: block; width: 100%; margin: 10px 0; }
-    button { padding: 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Bitácora de Prefectos</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background-color: white;
+            border-bottom: 3px solid #0a7c3a;
+        }
+
+        .header img {
+            height: 70px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #0a7c3a;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 40px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #0a7c3a;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #08632f;
+        }
+
+        .resultado {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #e9f5ec;
+            border-left: 5px solid #0a7c3a;
+            font-size: 16px;
+        }
+    </style>
 </head>
+
 <body>
 
-<h2>📘 Bitácora Digital</h2>
+    <!-- ENCABEZADO -->
+    <div class="header">
+        <img src="/static/UDL_LogotipoColor.png" alt="Logo UDL">
+        <h1>Bitácora de Prefectos</h1>
+    </div>
 
-<form action="/buscar" method="post">
-  <label>Matrícula del maestro</label>
-  <input type="number" name="matricula" required>
+    <!-- CONTENIDO -->
+    <div class="container">
+        <form method="post" action="/buscar">
 
-  <label>Día</label>
-  <select name="dia" required>
-    <option>Lunes</option>
-    <option>Martes</option>
-    <option>Miércoles</option>
-    <option>Jueves</option>
-    <option>Viernes</option>
-  </select>
+            <label for="matricula">Matrícula del maestro</label>
+            <input type="text" name="matricula" id="matricula" required>
 
-  <button type="submit">Buscar</button>
-</form>
+            <label for="dia">Día</label>
+            <input type="text" name="dia" id="dia" placeholder="Ejemplo: lunes" required>
 
-{% if resultado %}
-<hr>
-<p><strong>{{ resultado }}</strong></p>
-{% endif %}
+            <button type="submit">Buscar</button>
+
+        </form>
+
+        {% if resultado %}
+        <div class="resultado">
+            {{ resultado }}
+        </div>
+        {% endif %}
+    </div>
 
 </body>
 </html>
