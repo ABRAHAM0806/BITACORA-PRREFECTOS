@@ -26,7 +26,7 @@ ARCHIVOS = [
     },
     {
         "archivo": "bitacora 2.xlsx",
-        "hoja": "concentrado diur2.",
+        "hoja": "diur2",
         "horas": ["12:00", "13:00", "14:00"],
         "dias": {
             "lunes": (4, 6),
@@ -53,7 +53,6 @@ def buscar_en_archivo(matricula, dia, config):
             header=None
         )
     except Exception as e:
-        # SI ESTE ARCHIVO FALLA, NO ROMPE TODO
         print(f"Error leyendo {config['archivo']} - {e}")
         return []
 
@@ -80,6 +79,14 @@ def buscar_en_archivo(matricula, dia, config):
     return resultados
 
 # ===============================
+def ordenar_por_hora(resultados):
+    def hora_a_minutos(h):
+        h, m = h.split(":")
+        return int(h) * 60 + int(m)
+
+    return sorted(resultados, key=lambda x: hora_a_minutos(x["hora"]))
+
+# ===============================
 def buscar_profesor(matricula, dia):
     matricula = normalizar(matricula)
     dia = dia.lower()
@@ -89,8 +96,7 @@ def buscar_profesor(matricula, dia):
         if dia in config["dias"]:
             resultados.extend(buscar_en_archivo(matricula, dia, config))
 
-    resultados.sort(key=lambda x: x["hora"])
-    return resultados
+    return ordenar_por_hora(resultados)
 
 # ===============================
 @app.get("/", response_class=HTMLResponse)
@@ -114,6 +120,7 @@ def buscar(request: Request, matricula: str = Form(...), dia: str = Form(...)):
             "resultados": clases
         }
     )
+
 
 
 
