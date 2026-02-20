@@ -8,9 +8,9 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# =====================
-# ARCHIVOS
-# =====================
+# ===============================
+# CONFIGURACIÓN DE ARCHIVOS
+# ===============================
 ARCHIVOS = [
     {
         "archivo": "bitacora.xlsx",
@@ -26,7 +26,7 @@ ARCHIVOS = [
     },
     {
         "archivo": "bitacora 2.xlsx",
-        "hoja": "concentrado2",
+        "hoja": "concentrado diur2.",
         "horas": ["12:00", "13:00", "14:00"],
         "dias": {
             "lunes": (4, 6),
@@ -38,19 +38,24 @@ ARCHIVOS = [
     }
 ]
 
-# =====================
+# ===============================
 def normalizar(valor):
     return str(valor).strip().upper()
 
-# =====================
+# ===============================
 def buscar_en_archivo(matricula, dia, config):
     resultados = []
 
-    df = pd.read_excel(
-        config["archivo"],
-        sheet_name=config["hoja"],
-        header=None
-    )
+    try:
+        df = pd.read_excel(
+            config["archivo"],
+            sheet_name=config["hoja"],
+            header=None
+        )
+    except Exception as e:
+        # SI ESTE ARCHIVO FALLA, NO ROMPE TODO
+        print(f"Error leyendo {config['archivo']} - {e}")
+        return []
 
     col_inicio, col_fin = config["dias"][dia]
     horas = config["horas"]
@@ -74,7 +79,7 @@ def buscar_en_archivo(matricula, dia, config):
 
     return resultados
 
-# =====================
+# ===============================
 def buscar_profesor(matricula, dia):
     matricula = normalizar(matricula)
     dia = dia.lower()
@@ -84,11 +89,10 @@ def buscar_profesor(matricula, dia):
         if dia in config["dias"]:
             resultados.extend(buscar_en_archivo(matricula, dia, config))
 
-    # ordenar por hora
     resultados.sort(key=lambda x: x["hora"])
     return resultados
 
-# =====================
+# ===============================
 @app.get("/", response_class=HTMLResponse)
 def inicio(request: Request):
     return templates.TemplateResponse(
@@ -96,7 +100,7 @@ def inicio(request: Request):
         {"request": request, "resultados": None}
     )
 
-# =====================
+# ===============================
 @app.post("/buscar", response_class=HTMLResponse)
 def buscar(request: Request, matricula: str = Form(...), dia: str = Form(...)):
     clases = buscar_profesor(matricula, dia)
@@ -110,5 +114,6 @@ def buscar(request: Request, matricula: str = Form(...), dia: str = Form(...)):
             "resultados": clases
         }
     )
+
 
 
