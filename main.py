@@ -26,7 +26,7 @@ ARCHIVOS = [
     },
     {
         "archivo": "bitacora 2.xlsx",
-        "hoja": "concentrado diur2.",
+        "hoja": "concentrado2",
         "horas": ["12:00", "13:00", "14:00"],
         "dias": {
             "lunes": (4, 6),
