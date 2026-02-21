@@ -1,28 +1,77 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 import pandas as pd
 
 app = FastAPI()
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-ARCHIVO = "bitacora 2.xlsx"
-HOJA = "diur2"
+# ====== ARCHIVOS ======
+ARCHIVOS = [
+    {"file": "bitacora.xlsx", "sheet": "concentrado"},
+    {"file": "bitacora 2.xlsx", "sheet": "diur2"},
+]
+
+# ====== CONFIG ======
+DIAS = {
+    "lunes": (4, 8),
+    "martes": (9, 13),
+    "miercoles": (14, 18),
+    "jueves": (19, 23),
+    "viernes": (24, 28),
+}
+
+HORAS = ["7:00", "8:00", "9:00", "10:00", "11:00"]
 
 
-def ordenar_hora(h):
-    """
-    Convierte '07:00-08:00' → 700 para poder ordenar bien
-    """
-    try:
-        return int(h.split(":")[0]) * 100
-    except:
-        return 9999
+def normalizar(valor):
+    return str(valor).strip().upper()
+
+
+def buscar_profesor(matricula: str, dia: str):
+    matricula = normalizar(matricula)
+    dia = dia.lower()
+    resultados = []
+
+    if dia not in DIAS:
+        return resultados
+
+    col_inicio, col_fin = DIAS[dia]
+
+    for info in ARCHIVOS:
+        try:
+            df = pd.read_excel(info["file"], sheet_name=info["sheet"], header=None)
+        except Exception as e:
+            print(f"Error leyendo {info['file']} - {e}")
+            continue
+
+        for fila in range(4, 68):
+            aula = normalizar(df.iloc[fila, 0])
+            grupo = normalizar(df.iloc[fila, 1])
+            licenciatura = str(df.iloc[fila, 2]).strip()
+
+            for i, col in enumerate(range(col_inicio, col_fin + 1)):
+                celda = normalizar(df.iloc[fila, col])
+
+                if celda == matricula:
+                    resultados.append({
+                        "hora": HORAS[i],
+                        "aula": aula,
+                        "grupo": grupo,
+                        "licenciatura": licenciatura
+                    })
+
+    # ordenar por hora
+    resultados.sort(key=lambda x: HORAS.index(x["hora"]))
+
+    return resultados
 
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
+def inicio(request: Request):
     return templates.TemplateResponse(
         "index.html",
         {"request": request, "resultados": None}
@@ -30,76 +79,19 @@ async def home(request: Request):
 
 
 @app.post("/buscar", response_class=HTMLResponse)
-async def buscar(
-    request: Request,
-    matricula: str = Form(...)
-):
-    try:
-        df = pd.read_excel(ARCHIVO, sheet_name=HOJA)
-    except Exception as e:
-        print(f"Error leyendo {ARCHIVO} - {e}")
-        return templates.TemplateResponse(
-            "index.html",
-            {"request": request, "resultados": []}
-        )
-
-    # Normalizamos columnas (MUY IMPORTANTE)
-    df.columns = df.columns.str.strip().str.upper()
-
-    # Ajusta aquí si tus columnas se llaman diferente
-    COL_MATRICULA = "MATRICULA"
-    COL_HORA = "HORA"
-    COL_AULA = "AULA"
-    COL_GRUPO = "GRUPO"
-    COL_LIC = "LICENCIATURA"
-
-    if COL_MATRICULA not in df.columns:
-        print("No existe la columna MATRICULA")
-        return templates.TemplateResponse(
-            "index.html",
-            {"request": request, "resultados": []}
-        )
-
-    # Filtrar por matrícula
-    df[COL_MATRICULA] = (
-    df[COL_MATRICULA]
-    .astype(str)
-    .str.strip()
-    .str.upper()
-)
-
-matricula = matricula.strip().upper()
-
-df_filtrado = df[df[COL_MATRICULA] == matricula]
-
-
-    if df_filtrado.empty:
-        return templates.TemplateResponse(
-            "index.html",
-            {"request": request, "resultados": []}
-        )
-
-    # Ordenar horarios correctamente
-    df_filtrado["__orden"] = df_filtrado[COL_HORA].astype(str).apply(ordenar_hora)
-    df_filtrado = df_filtrado.sort_values("__orden")
-
-    resultados = []
-
-    for _, fila in df_filtrado.iterrows():
-        resultados.append({
-            "hora": str(fila.get(COL_HORA, "")),
-            "aula": str(fila.get(COL_AULA, "")),
-            "grupo": str(fila.get(COL_GRUPO, "")),
-            "licenciatura": str(fila.get(COL_LIC, ""))
-        })
+def buscar(request: Request, matricula: str = Form(...), dia: str = Form(...)):
+    clases = buscar_profesor(matricula, dia)
 
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
-            "resultados": resultados
+            "matricula": matricula.upper(),
+            "dia": dia.capitalize(),
+            "resultados": clases
         }
     )
+
 
 
 
