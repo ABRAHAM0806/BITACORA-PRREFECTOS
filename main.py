@@ -61,7 +61,17 @@ async def buscar(
         )
 
     # Filtrar por matrícula
-    df_filtrado = df[df[COL_MATRICULA].astype(str) == matricula.strip()]
+    df[COL_MATRICULA] = (
+    df[COL_MATRICULA]
+    .astype(str)
+    .str.strip()
+    .str.upper()
+)
+
+matricula = matricula.strip().upper()
+
+df_filtrado = df[df[COL_MATRICULA] == matricula]
+
 
     if df_filtrado.empty:
         return templates.TemplateResponse(
