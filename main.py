@@ -9,13 +9,11 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# ===============================
-# ARCHIVOS
-# ===============================
+# ====== ARCHIVOS ======
 ARCHIVOS = [
     {
         "file": "bitacora.xlsx",
-        "sheet": "concentrado diur.",
+        "sheet": "concentrado",
         "horas": ["7:00", "8:00", "9:00", "10:00", "11:00"],
         "dias": {
             "lunes": (4, 8),
@@ -39,77 +37,26 @@ ARCHIVOS = [
     }
 ]
 
-# ⏰ TODAS las horas (mañana + tarde)
-HORAS = [
-    "7:00", "8:00", "9:00", "10:00", "11:00",
-    "12:00", "13:00", "14:00"
-]
-
-# ===============================
+# ====== UTIL ======
 def normalizar(valor):
+    if pd.isna(valor):
+        return ""
     return str(valor).strip().upper()
 
 
-# ===============================
-# ORDENAR POR HORA (FORMA CORRECTA)
-# ===============================
-def ordenar_por_hora(resultados):
-    def hora_a_minutos(h):
-        h, m = h.split(":")
-        return int(h) * 60 + int(m)
-
-    return sorted(resultados, key=lambda x: hora_a_minutos(x["hora"]))
-
-
-# ===============================
+# ====== LOGICA PRINCIPAL ======
 def buscar_profesor(matricula: str, dia: str):
     matricula = normalizar(matricula)
     dia = dia.lower()
     resultados = []
 
-    for config in ARCHIVOS:
-        # 🔒 si el archivo NO define días, se ignora
-        if "dias" not in config:
-            continue
-
-        # 🔒 si el día no está en ese archivo, se ignora
-        if dia not in config["dias"]:
-            continue
-
-        try:
-            df = pd.read_excel(
-                config["file"],
-                sheet_name=config["sheet"],
-                header=None
-            )
-        except Exception as e:
-            print(f"Error leyendo {config['file']} - {e}")
-            continue
-
-        col_inicio, col_fin = config["dias"][dia]
-        horas = config["horas"]
-
-        for fila in range(4, 68):
-            aula = normalizar(df.iloc[fila, 0])
-            grupo = normalizar(df.iloc[fila, 1])
-            licenciatura = str(df.iloc[fila, 2]).strip()
-
-            for i, col in enumerate(range(col_inicio, col_fin + 1)):
-                celda = normalizar(df.iloc[fila, col])
-
-                if celda == matricula:
-                    resultados.append({
-                        "hora": horas[i],
-                        "aula": aula,
-                        "grupo": grupo,
-                        "licenciatura": licenciatura
-                    })
-
-        return resultados
-
-    col_inicio, col_fin = DIAS[dia]
-
     for info in ARCHIVOS:
+        if dia not in info["dias"]:
+            continue
+
+        col_inicio, col_fin = info["dias"][dia]
+        horas = info["horas"]
+
         try:
             df = pd.read_excel(info["file"], sheet_name=info["sheet"], header=None)
         except Exception as e:
@@ -119,27 +66,26 @@ def buscar_profesor(matricula: str, dia: str):
         for fila in range(4, 68):
             aula = normalizar(df.iloc[fila, 0])
             grupo = normalizar(df.iloc[fila, 1])
-            licenciatura = str(df.iloc[fila, 2]).strip()
+            licenciatura = normalizar(df.iloc[fila, 2])
 
             for i, col in enumerate(range(col_inicio, col_fin + 1)):
-                if i >= len(HORAS):
-                    continue
-
                 celda = normalizar(df.iloc[fila, col])
 
-                if celda == matricula:
+                if celda == matricula and i < len(horas):
                     resultados.append({
-                        "hora": HORAS[i],
+                        "hora": horas[i],
                         "aula": aula,
                         "grupo": grupo,
                         "licenciatura": licenciatura
                     })
 
-    # 🔑 ORDEN FINAL (NO sort inline)
-    return ordenar_por_hora(resultados)
+    # ordenar por hora (string funciona bien aquí)
+    resultados.sort(key=lambda x:x["hora"])
+
+    return resultados
 
 
-# ===============================
+# ====== RUTAS ======
 @app.get("/", response_class=HTMLResponse)
 def inicio(request: Request):
     return templates.TemplateResponse(
@@ -161,7 +107,4 @@ def buscar(request: Request, matricula: str = Form(...), dia: str = Form(...)):
             "resultados": clases
         }
     )
-
-
-
 
