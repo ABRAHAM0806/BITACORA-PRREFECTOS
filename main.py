@@ -68,6 +68,14 @@ def buscar_profesor(matricula: str, dia: str):
     resultados = []
 
     for config in ARCHIVOS:
+        # 🔒 si el archivo NO define días, se ignora
+        if "dias" not in config:
+            continue
+
+        # 🔒 si el día no está en ese archivo, se ignora
+        if dia not in config["dias"]:
+            continue
+
         try:
             df = pd.read_excel(
                 config["file"],
@@ -78,10 +86,8 @@ def buscar_profesor(matricula: str, dia: str):
             print(f"Error leyendo {config['file']} - {e}")
             continue
 
-        if dia not in config.get("dias", DIAS):
-            continue
-
-        col_inicio, col_fin = config.get("dias", DIAS)[dia]
+        col_inicio, col_fin = config["dias"][dia]
+        horas = config["horas"]
 
         for fila in range(4, 68):
             aula = normalizar(df.iloc[fila, 0])
@@ -93,7 +99,7 @@ def buscar_profesor(matricula: str, dia: str):
 
                 if celda == matricula:
                     resultados.append({
-                        "hora": config.get("horas", HORAS)[i],
+                        "hora": horas[i],
                         "aula": aula,
                         "grupo": grupo,
                         "licenciatura": licenciatura
