@@ -13,20 +13,31 @@ templates = Jinja2Templates(directory="templates")
 # ARCHIVOS
 # ===============================
 ARCHIVOS = [
-    {"file": "bitacora.xlsx", "sheet": "concentrado diur."},
-    {"file": "bitacora 2.xlsx", "sheet": "diur2"},
+    {
+        "file": "bitacora.xlsx",
+        "sheet": "concentrado",
+        "horas": ["7:00", "8:00", "9:00", "10:00", "11:00"],
+        "dias": {
+            "lunes": (4, 8),
+            "martes": (9, 13),
+            "miercoles": (14, 18),
+            "jueves": (19, 23),
+            "viernes": (24, 28),
+        }
+    },
+    {
+        "file": "bitacora 2.xlsx",
+        "sheet": "diur2",
+        "horas": ["12:00", "13:00", "14:00"],
+        "dias": {
+            "lunes": (4, 6),
+            "martes": (7, 9),
+            "miercoles": (10, 12),
+            "jueves": (13, 15),
+            "viernes": (16, 18),
+        }
+    }
 ]
-
-# ===============================
-# CONFIGURACIÓN
-# ===============================
-DIAS = {
-    "lunes": (4, 8),
-    "martes": (9, 13),
-    "miercoles": (14, 18),
-    "jueves": (19, 23),
-    "viernes": (24, 28),
-}
 
 # ⏰ TODAS las horas (mañana + tarde)
 HORAS = [
