@@ -80,7 +80,10 @@ def buscar_profesor(matricula: str, dia: str):
                     })
 
     # ordenar por hora (string funciona bien aquí)
-    resultados.sort(key=lambda x: x["hora"])
+   resultados.sort(
+    key=lambda x: int(x["hora"].split(":")[0])
+)
+
 
     return resultados
 
