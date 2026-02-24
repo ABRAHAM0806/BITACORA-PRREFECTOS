@@ -9,13 +9,17 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# ====== ARCHIVOS ======
+# ===============================
+# ARCHIVOS
+# ===============================
 ARCHIVOS = [
     {"file": "bitacora.xlsx", "sheet": "concentrado diur."},
     {"file": "bitacora 2.xlsx", "sheet": "diur2"},
 ]
 
-# ====== CONFIG ======
+# ===============================
+# CONFIGURACIÓN
+# ===============================
 DIAS = {
     "lunes": (4, 8),
     "martes": (9, 13),
@@ -24,17 +28,29 @@ DIAS = {
     "viernes": (24, 28),
 }
 
-# Horas completas (mañana + tarde)
+# ⏰ TODAS las horas (mañana + tarde)
 HORAS = [
     "7:00", "8:00", "9:00", "10:00", "11:00",
     "12:00", "13:00", "14:00"
 ]
 
-
+# ===============================
 def normalizar(valor):
     return str(valor).strip().upper()
 
 
+# ===============================
+# ORDENAR POR HORA (FORMA CORRECTA)
+# ===============================
+def ordenar_por_hora(resultados):
+    def hora_a_minutos(h):
+        h, m = h.split(":")
+        return int(h) * 60 + int(m)
+
+    return sorted(resultados, key=lambda x: hora_a_minutos(x["hora"]))
+
+
+# ===============================
 def buscar_profesor(matricula: str, dia: str):
     matricula = normalizar(matricula)
     dia = dia.lower()
@@ -47,11 +63,7 @@ def buscar_profesor(matricula: str, dia: str):
 
     for info in ARCHIVOS:
         try:
-            df = pd.read_excel(
-                info["file"],
-                sheet_name=info["sheet"],
-                header=None
-            )
+            df = pd.read_excel(info["file"], sheet_name=info["sheet"], header=None)
         except Exception as e:
             print(f"Error leyendo {info['file']} - {e}")
             continue
@@ -75,29 +87,21 @@ def buscar_profesor(matricula: str, dia: str):
                         "licenciatura": licenciatura
                     })
 
-    # ===== ORDENAR HORARIOS (SIN ROMPER NADA) =====
-    resultados.sort(key=lambda x: HORAS.index(x["hora"]))
-
-    return resultados
+    # 🔑 ORDEN FINAL (NO sort inline)
+    return ordenar_por_hora(resultados)
 
 
+# ===============================
 @app.get("/", response_class=HTMLResponse)
 def inicio(request: Request):
     return templates.TemplateResponse(
         "index.html",
-        {
-            "request": request,
-            "resultados": None
-        }
+        {"request": request, "resultados": None}
     )
 
 
 @app.post("/buscar", response_class=HTMLResponse)
-def buscar(
-    request: Request,
-    matricula: str = Form(...),
-    dia: str = Form(...)
-):
+def buscar(request: Request, matricula: str = Form(...), dia: str = Form(...)):
     clases = buscar_profesor(matricula, dia)
 
     return templates.TemplateResponse(
@@ -109,8 +113,6 @@ def buscar(
             "resultados": clases
         }
     )
-
-
 
 
 
