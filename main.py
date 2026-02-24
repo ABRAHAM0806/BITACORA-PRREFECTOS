@@ -67,7 +67,10 @@ def buscar_profesor(matricula: str, dia: str):
     dia = dia.lower()
     resultados = []
 
-    if dia not in DIAS:
+   for config in ARCHIVOS:
+    if dia in config["dias"]:
+        ...
+
         return resultados
 
     col_inicio, col_fin = DIAS[dia]
