@@ -15,7 +15,7 @@ templates = Jinja2Templates(directory="templates")
 ARCHIVOS = [
     {
         "file": "bitacora.xlsx",
-        "sheet": "concentrado",
+        "sheet": "concentrado diur.",
         "horas": ["7:00", "8:00", "9:00", "10:00", "11:00"],
         "dias": {
             "lunes": (4, 8),
