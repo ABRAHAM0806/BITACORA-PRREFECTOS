@@ -67,9 +67,37 @@ def buscar_profesor(matricula: str, dia: str):
     dia = dia.lower()
     resultados = []
 
-   for config in ARCHIVOS:
-    if dia in config["dias"]:
-        ...
+    for config in ARCHIVOS:
+        try:
+            df = pd.read_excel(
+                config["file"],
+                sheet_name=config["sheet"],
+                header=None
+            )
+        except Exception as e:
+            print(f"Error leyendo {config['file']} - {e}")
+            continue
+
+        if dia not in config.get("dias", DIAS):
+            continue
+
+        col_inicio, col_fin = config.get("dias", DIAS)[dia]
+
+        for fila in range(4, 68):
+            aula = normalizar(df.iloc[fila, 0])
+            grupo = normalizar(df.iloc[fila, 1])
+            licenciatura = str(df.iloc[fila, 2]).strip()
+
+            for i, col in enumerate(range(col_inicio, col_fin + 1)):
+                celda = normalizar(df.iloc[fila, col])
+
+                if celda == matricula:
+                    resultados.append({
+                        "hora": config.get("horas", HORAS)[i],
+                        "aula": aula,
+                        "grupo": grupo,
+                        "licenciatura": licenciatura
+                    })
 
         return resultados
 
