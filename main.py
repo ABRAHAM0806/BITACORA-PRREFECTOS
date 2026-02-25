@@ -44,6 +44,12 @@ def normalizar(valor):
     return str(valor).strip().upper()
 
 
+def hora_a_minutos(hora: str) -> int:
+    h, m = hora.split(":")
+    return int(h) * 60 + int(m)
+
+
+
 # ====== LOGICA PRINCIPAL ======
 def buscar_profesor(matricula: str, dia: str):
     matricula = normalizar(matricula)
